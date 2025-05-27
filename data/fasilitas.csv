@@ -1,0 +1,18 @@
+nama_fasilitas;kategori_fasilitas;jumlah
+Madrasah Aliyah (MA);pendidikan;1
+Sekolah Menengah Kejuruan (SMK);pendidikan;7
+Sekolah Menengah Atas (SMA);pendidikan;5
+Madrasah Tsanawiyah (MTs);pendidikan;6
+Sekolah Menengah Pertama (SMP);pendidikan;10
+Madrasah Ibtidaiyah (MI);pendidikan;7
+Sekolah Dasar (SD);pendidikan;38
+Raudatul Athfal (RA);pendidikan;9
+Taman Kanak-kanak (TK);pendidikan;11
+Rumah Sakit;kesehatan;1
+Poliklinik/Balai Pengobatan;kesehatan;5
+Puskesmas Rawat Inap;kesehatan;1
+Apotek;kesehatan;7
+Masjid;tempat ibadah;60
+Mushola;tempat ibadah;213
+Gereja Protestan;tempat ibadah;4
+Gereja Katholik;tempat ibadah;3
