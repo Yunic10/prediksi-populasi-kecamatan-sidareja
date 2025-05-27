@@ -270,7 +270,10 @@ def app():
             'kategori_usia': 'Kelompok Umur',
             'laki_laki': 'Laki-laki',
             'perempuan': 'Perempuan',
-            'total': 'Total'
+            'total': 'Total',
+            '% Perubahan laki_laki': '% Δ Laki-laki',  # Konsistenkan rename
+            '% Perubahan perempuan': '% Δ Perempuan',
+            '% Perubahan total': '% Δ Total'
         })
         .reset_index(drop=True)  # Reset index
     )
@@ -290,7 +293,7 @@ def app():
     formatted_df['Total'] = formatted_df['Total'].apply(lambda x: format_value(x))
 
     # Format kolom persentase jika ada
-    pct_cols = ['% Δ Laki_laki', '% Δ Perempuan', '% Δ Total']
+    pct_cols = ['% Δ Laki-laki', '% Δ Perempuan', '% Δ Total']
     for col in pct_cols:
         if col in formatted_df.columns:
             formatted_df[col] = formatted_df[col].apply(lambda x: format_value(x, is_pct=True))

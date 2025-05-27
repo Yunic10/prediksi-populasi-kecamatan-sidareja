@@ -62,51 +62,51 @@ def app():
     cols = st.columns(3)
     with cols[0]:
         st.metric(
-            "Prediksi Laki-laki {[last_year+1]}", 
+            f"Prediksi Laki-laki {last_year+1}", 
             f"{predictions['laki_laki'][0]:,.0f}",
             delta=f"{changes['laki_laki'][0]:+.1f}%"
         )
         st.metric(
-            "Prediksi Laki-laki {[last_year+2]}", 
+            f"Prediksi Laki-laki {last_year+2}", 
             f"{predictions['laki_laki'][1]:,.0f}",
             delta=f"{changes['laki_laki'][1]:+.1f}%"
         )
         st.metric(
-            "Prediksi Laki-laki {[last_year+3]}", 
+            f"Prediksi Laki-laki {last_year+3}", 
             f"{predictions['laki_laki'][2]:,.0f}",
             delta=f"{changes['laki_laki'][2]:+.1f}%"
         )
 
     with cols[1]:
         st.metric(
-            "Prediksi Perempuan (2024)",
+            f"Prediksi Perempuan {last_year+1}",
             f"{predictions['perempuan'][0]:,.0f}",
             delta=f"{changes['perempuan'][0]:+.1f}%"
         )
         st.metric(
-            "Prediksi Perempuan (2025)",
+            f"Prediksi Perempuan {last_year+2}",
             f"{predictions['perempuan'][1]:,.0f}",
             delta=f"{changes['perempuan'][1]:+.1f}%"
         )
         st.metric(
-            "Prediksi Perempuan (2026)",
+            f"Prediksi Perempuan {last_year+3}",
             f"{predictions['perempuan'][2]:,.0f}",
             delta=f"{changes['perempuan'][2]:+.1f}%"
         )
 
     with cols[2]:
         st.metric(
-            "Total Penduduk (2024)",
+            f"Total Penduduk {last_year+1}",
             f"{predictions['laki_laki'][0] + predictions['perempuan'][0]:,.0f}",
             delta=f"{changes['jumlah_penduduk'][0]:+.1f}%"
         )
         st.metric(
-            "Total Penduduk (2025)",
+            f"Total Penduduk {last_year+2}",
             f"{predictions['laki_laki'][1] + predictions['perempuan'][1]:,.0f}",
             delta=f"{changes['jumlah_penduduk'][1]:+.1f}%"
         )
         st.metric(
-            "Total Penduduk (2026)",
+            f"Total Penduduk {last_year+3}",
             f"{predictions['laki_laki'][2] + predictions['perempuan'][2]:,.0f}",
             delta=f"{changes['jumlah_penduduk'][2]:+.1f}%"
         )
@@ -210,7 +210,7 @@ def app():
     # Calculate percentage changes only for columns that exist
     if "laki_laki" in df.columns:
         df["% Perubahan Laki_laki"] = df["laki_laki"].pct_change() * 100
-        available_cols["% Perubahan Laki_laki"] = "% Δ Laki"
+        available_cols["% Perubahan Laki_laki"] = "% Δ Laki-laki"
 
     if "perempuan" in df.columns:
         df["% Perubahan Perempuan"] = df["perempuan"].pct_change() * 100
