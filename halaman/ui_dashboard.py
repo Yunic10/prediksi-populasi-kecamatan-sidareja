@@ -12,7 +12,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')  # Menggunakan environment variable untuk keamanan
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 def app():
-    st.header("Prediksi Populasi Kecamatan Sidareja")
+    st.title("Prediksi Populasi Kecamatan Sidareja")
 
     # Ambil data tahunan untuk grafik
     df= fetch_data(

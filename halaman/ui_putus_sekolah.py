@@ -44,21 +44,21 @@ def app():
     cols = st.columns(3)
     with cols[0]:
         st.metric(
-            "Prediksi (2024)", 
+            f"Prediksi {last_year+1}", 
             f"{predictions[0]:,.0f}",
             delta=f"{changes[0]:+.1f}%"
         )
     
     with cols[1]:
         st.metric(
-            "Prediksi (2025)", 
+            f"Prediksi {last_year+2}", 
             f"{predictions[1]:,.0f}",
             delta=f"{changes[1]:+.1f}%"
         )
     
     with cols[2]:
         st.metric(
-            "Prediksi (2026)", 
+            f"Prediksi {last_year+3}", 
             f"{predictions[2]:,.0f}",
             delta=f"{changes[2]:+.1f}%"
         )

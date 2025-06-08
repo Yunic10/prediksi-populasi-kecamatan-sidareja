@@ -53,34 +53,34 @@ def app():
     cols = st.columns(2)
     with cols[0]:
         st.metric(
-            "Prediksi Masuk (2024)", 
+            f"Prediksi Masuk {last_year+1}", 
             f"{predictions['migrasi_masuk'][0]:,.0f}",
             delta=f"{changes['migrasi_masuk'][0]:+.1f}%"
         )
         st.metric(
-            "Prediksi Masuk (2025)", 
+            f"Prediksi Masuk {last_year+2}", 
             f"{predictions['migrasi_masuk'][1]:,.0f}",
             delta=f"{changes['migrasi_masuk'][1]:+.1f}%"
         )
         st.metric(
-            "Prediksi Masuk (2026)", 
+            f"Prediksi Masuk {last_year+3}", 
             f"{predictions['migrasi_masuk'][2]:,.0f}",
             delta=f"{changes['migrasi_masuk'][2]:+.1f}%"
         )
 
     with cols[1]:
         st.metric(
-            "Prediksi Keluar (2024)",
+            f"Prediksi Keluar {last_year+1}",
             f"{predictions['migrasi_keluar'][0]:,.0f}",
             delta=f"{changes['migrasi_keluar'][0]:+.1f}%"
         )
         st.metric(
-            "Prediksi Keluar (2025)",
+            f"Prediksi Keluar {last_year+2}",
             f"{predictions['migrasi_keluar'][1]:,.0f}",
             delta=f"{changes['migrasi_keluar'][1]:+.1f}%"
         )
         st.metric(
-            "Prediksi Keluar (2026)",
+            f"Prediksi Keluar {last_year+3}",
             f"{predictions['migrasi_keluar'][2]:,.0f}",
             delta=f"{changes['migrasi_keluar'][2]:+.1f}%"
         )

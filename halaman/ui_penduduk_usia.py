@@ -130,7 +130,7 @@ def app():
     pred_df = pd.DataFrame(pred_data)
     
     # Display predictions
-    st.header("Hasil Prediksi 2024-2026")
+    st.header(f"Hasil Prediksi {last_year+1} - {last_year+3}")
     
     # Age group selector
     selected_group = st.selectbox(
@@ -144,7 +144,7 @@ def app():
     
     cols = st.columns(3)
     with cols[0]:
-        for i, year in enumerate([2024, 2025, 2026]):
+        for i, year in enumerate([last_year+1, last_year+2, last_year+3]):
             st.metric(
                 f"Prediksi {selected_group} {year}", 
                 f"{group_pred[group_pred['Tahun'] == year]['Total'].values[0]:,.0f}",
@@ -152,7 +152,7 @@ def app():
             )
     
     with cols[1]:
-        for i, year in enumerate([2024, 2025, 2026]):
+        for i, year in enumerate([last_year+1, last_year+2, last_year+3]):
             st.metric(
                 f"Prediksi {selected_group} {year}", 
                 f"{group_pred[group_pred['Tahun'] == year]['Laki-laki'].values[0]:,.0f}",
@@ -160,7 +160,7 @@ def app():
             )
     
     with cols[2]:
-        for i, year in enumerate([2024, 2025, 2026]):
+        for i, year in enumerate([last_year+1, last_year+2, last_year+3]):
             st.metric(
                 f"Prediksi {selected_group} {year}", 
                 f"{group_pred[group_pred['Tahun'] == year]['Perempuan'].values[0]:,.0f}",

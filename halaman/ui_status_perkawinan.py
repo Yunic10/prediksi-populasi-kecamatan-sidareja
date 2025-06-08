@@ -53,17 +53,17 @@ def app():
     cols = st.columns(2)
     with cols[0]:
         st.metric(
-            "Prediksi Kawin (2024)", 
+            f"Prediksi Kawin {last_year+1}", 
             f"{predictions['status_kawin'][0]:,.0f}",
             delta=f"{changes['status_kawin'][0]:+.1f}%"
         )
         st.metric(
-            "Prediksi Kawin (2025)", 
+            f"Prediksi Kawin {last_year+2}", 
             f"{predictions['status_kawin'][1]:,.0f}",
             delta=f"{changes['status_kawin'][1]:+.1f}%"
         )
         st.metric(
-            "Prediksi Kawin (2026)", 
+            f"Prediksi Kawin {last_year+3}", 
             f"{predictions['status_kawin'][2]:,.0f}",
             delta=f"{changes['status_kawin'][2]:+.1f}%"
         )
