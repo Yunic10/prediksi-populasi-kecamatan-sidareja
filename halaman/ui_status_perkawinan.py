@@ -178,7 +178,7 @@ def app():
     # Terapkan styling
     styled_df = (
         display_df.style
-        .applymap(style_negative_positive, subset=["% Δ Kawin", "% Δ Cerai"])
+        .map(style_negative_positive, subset=["% Δ Kawin", "% Δ Cerai"])
         .format(None, na_rep="")  # Handle nilai kosong
     )
     

@@ -1,12 +1,9 @@
 import streamlit as st
-
-st.set_page_config(
-    page_title="Sidareja Predict",
-)
+st.set_page_config(page_title="Sidareja Predict")
 
 from streamlit_option_menu import option_menu
 from halaman import data_jumlah_penduduk, data_kepala_keluarga, data_putus_sekolah, data_migrasi, data_status_perkawinan, data_penduduk_usia, login_page, ui_dashboard, ui_kepala_keluarga, ui_migrasi, ui_penduduk_usia, ui_status_perkawinan, ui_putus_sekolah
-from auth import login, logout, is_authenticated
+from auth import is_authenticated, get_current_user, logout
 
 def show_unauthenticated_menu():
     with st.sidebar:
@@ -18,12 +15,11 @@ def show_unauthenticated_menu():
             default_index=0,
             styles={
                 "container": {"padding": "5!important"},
-                "icon": {"color": "white", "font-size": "14px"}, 
+                "icon": {"color": "white", "font-size": "14px"},
                 "nav-link": {"color": "white", "font-size": "14px", "text-align": "left", "margin": "5px 0px", "--hover-color": "blue"},
                 "nav-link-selected": {"background-color": "grey", "font-weight": "normal"},
             }
         )
-
     if app == "Dashboard":
         ui_dashboard.app()
     elif app == "Penduduk Berdasarkan Usia":
@@ -40,7 +36,12 @@ def show_unauthenticated_menu():
         login_page.app()
 
 def show_authenticated_menu():
-    st.sidebar.title("Navigasi")
+    # Tampilkan informasi user yang sedang login
+    name, username = get_current_user()
+    st.sidebar.title("👤 User Info")
+    st.sidebar.success(f"Selamat datang, {name}!")
+    st.sidebar.info(f"Username: {username}")
+    
     with st.sidebar:
         app = option_menu(
             menu_title='',
@@ -66,32 +67,31 @@ def show_authenticated_menu():
             default_index=0,
             styles={
                 "container": {"padding": "5!important"},
-                "icon": {"color": "white", "font-size": "14px"}, 
+                "icon": {"color": "white", "font-size": "14px"},
                 "nav-link": {"color": "white", "font-size": "14px", "text-align": "left", "margin": "5px 0px", "--hover-color": "blue"},
                 "nav-link-selected": {"background-color": "grey", "font-weight": "normal"},
             }
         )
-
-    if app == "Data Jumlah Penduduk":
+    if app == 'Data Jumlah Penduduk':
         data_jumlah_penduduk.app()
-    elif app == "Data Jumlah Kepala Keluarga":
+    elif app == 'Data Jumlah Kepala Keluarga':
         data_kepala_keluarga.app()
-    elif app == "Data Jumlah Migrasi":
-        data_migrasi.app()  # Anda perlu membuat modul/fungsi ini
-    elif app == "Data Status Perkawinan":
-        data_status_perkawinan.app()  # Anda perlu membuat modul/fungsi ini
-    elif app == "Data Putus Sekolah":
+    elif app == 'Data Jumlah Migrasi':
+        data_migrasi.app()
+    elif app == 'Data Status Perkawinan':
+        data_status_perkawinan.app()
+    elif app == 'Data Putus Sekolah':
         data_putus_sekolah.app()
-    elif app == "Data Penduduk Berdasarkan Usia":
-        data_penduduk_usia.app()  # Di kode asli Anda ini mengarah ke data_tidak_bersekolah, mungkin perlu penyesuaian
-    elif app == "Logout":
+    elif app == 'Data Penduduk Berdasarkan Usia':
+        data_penduduk_usia.app()
+    elif app == 'Logout':
         logout()
 
 def main():
-    if not is_authenticated():
-        show_unauthenticated_menu()
-    else:
+    if is_authenticated():
         show_authenticated_menu()
+    else:
+        show_unauthenticated_menu()
 
 if __name__ == "__main__":
-    main()
+    main() 

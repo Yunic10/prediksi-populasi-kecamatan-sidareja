@@ -1,10 +1,15 @@
 import streamlit as st
 import pandas as pd
 from supabase import create_client, Client
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Konfigurasi Supabase
-SUPABASE_URL = "https://qkiahgkolotgezlrtggy.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFraWFoZ2tvbG90Z2V6bHJ0Z2d5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDg3NzIsImV4cCI6MjA1NTUyNDc3Mn0.co0e3MISj_eKASiD_YdDJ0_-P1AWi-gVWm3ikHC30eA"
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def create_data(name, age):

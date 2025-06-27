@@ -4,28 +4,29 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from model import train_svm_model, predict_population
-from supabase import create_client, Client
-import os
-from dotenv import load_dotenv
+from data_utils import load_penduduk_usia_data
 
-# Load environment variables
-load_dotenv()
-
-# Initialize Supabase client
-@st.cache_resource
-def init_supabase():
-    SUPABASE_URL = os.getenv("SUPABASE_URL")
-    SUPABASE_KEY = os.getenv('SUPABASE_KEY')
-    return create_client(SUPABASE_URL, SUPABASE_KEY)
-
-supabase = init_supabase()
-
+@st.cache_data
 def fetch_population_data():
+    """Fetch population data dengan caching"""
     try:
-        response = supabase.table('penduduk_usia').select('*').execute()
-        df = pd.DataFrame(response.data)
-        df['id_tahun'] = df['id_tahun'].astype(int)
-        return df.sort_values('id_tahun')
+        df = load_penduduk_usia_data()
+        if not df.empty:
+            # Pastikan kolom id_tahun ada dan bertipe int
+            if 'id_tahun' in df.columns:
+                df['id_tahun'] = df['id_tahun'].astype(int)
+            else:
+                # Jika tidak ada kolom id_tahun, buat dari index atau kolom tahun
+                if 'tahun' in df.columns:
+                    df['id_tahun'] = df['tahun'].astype(int)
+                else:
+                    # Buat tahun dummy berdasarkan index
+                    df['id_tahun'] = range(2020, 2020 + len(df))
+            
+            return df.sort_values('id_tahun')
+        else:
+            st.warning("Data kosong atau tidak ditemukan!")
+            return pd.DataFrame()
     except Exception as e:
         st.error(f"Gagal mengambil data: {str(e)}")
         return pd.DataFrame()
@@ -34,19 +35,28 @@ def app():
     st.title("Prediksi Jumlah Penduduk per Kelompok Umur")
     st.markdown("---")
     
-    # Load data
+    # Load data dengan caching
     df = fetch_population_data()
     if df.empty:
         st.warning("Tidak ada data yang ditemukan!")
         st.stop()
     
+    # Tampilkan info data
+    st.info(f"Data yang dimuat: {len(df)} baris dari file CSV")
+    
     # Get unique age groups
-    age_groups = df['kategori_usia'].unique()
+    age_groups = df['kategori_usia'].unique() if 'kategori_usia' in df.columns else []
+    
+    if len(age_groups) == 0:
+        st.error("Kolom 'kategori_usia' tidak ditemukan dalam data!")
+        st.write("Kolom yang tersedia:", df.columns.tolist())
+        st.stop()
     
     # Calculate percentage changes
     df_grouped = df.groupby('kategori_usia')
     for col in ['laki_laki', 'perempuan', 'total']:
-        df[f'% Perubahan {col}'] = df_grouped[col].pct_change() * 100
+        if col in df.columns:
+            df[f'% Perubahan {col}'] = df_grouped[col].pct_change() * 100
     
     # Train models for each age group
     models = {}
@@ -55,6 +65,10 @@ def app():
     for group in age_groups:
         # Filter data for the current age group
         group_data = df[df['kategori_usia'] == group]
+        
+        if len(group_data) < 2:
+            st.warning(f"Data tidak cukup untuk kelompok {group}")
+            continue
         
         # Train models
         model_total, mae_total, mape_total, r2_total = train_svm_model(
@@ -84,9 +98,9 @@ def app():
         metrics[group] = {
             'MAPE Total': mape_total,
             'R² Total': r2_total,
-            'MAPE Laki': mape_laki,
+            'MAPE Laki': mae_laki,
             'R² Laki': r2_laki,
-            'MAPE Perempuan': mape_perempuan,
+            'MAPE Perempuan': mae_perempuan,
             'R² Perempuan': r2_perempuan
         }
     
@@ -96,6 +110,9 @@ def app():
     
     pred_data = []
     for group in age_groups:
+        if group not in models:
+            continue
+            
         # Get predictions
         pred_total = models[group]['total'].predict(next_years)
         pred_laki = models[group]['laki_laki'].predict(next_years)
@@ -105,32 +122,34 @@ def app():
         filtered_df = df[(df['id_tahun'] == last_year) & (df['kategori_usia'] == group)]
         if not filtered_df.empty:
             last_values = filtered_df.iloc[0]
+            
+            # Calculate percentage changes
+            changes_total = (pred_total - last_values['total']) / last_values['total'] * 100
+            changes_laki = (pred_laki - last_values['laki_laki']) / last_values['laki_laki'] * 100
+            changes_perempuan = (pred_perempuan - last_values['perempuan']) / last_values['perempuan'] * 100
+            
+            for i, year in enumerate(next_years.flatten()):
+                pred_data.append({
+                    'Tahun': year,
+                    'Kelompok Umur': group,
+                    'Total': pred_total[i],
+                    'Laki-laki': pred_laki[i],
+                    'Perempuan': pred_perempuan[i],
+                    '% Δ Total': changes_total[i],
+                    '% Δ Laki': changes_laki[i],
+                    '% Δ Perempuan': changes_perempuan[i]
+                })
         else:
-            # Handle the case where no matching data was found
-            last_values = None  # or some default value
             st.warning(f"No data found for year {last_year} and age group {group}")
-        
-        # Calculate percentage changes
-        changes_total = (pred_total - last_values['total']) / last_values['total'] * 100
-        changes_laki = (pred_laki - last_values['laki_laki']) / last_values['laki_laki'] * 100
-        changes_perempuan = (pred_perempuan - last_values['perempuan']) / last_values['perempuan'] * 100
-        
-        for i, year in enumerate(next_years.flatten()):
-            pred_data.append({
-                'Tahun': year,
-                'Kelompok Umur': group,
-                'Total': pred_total[i],
-                'Laki-laki': pred_laki[i],
-                'Perempuan': pred_perempuan[i],
-                '% Δ Total': changes_total[i],
-                '% Δ Laki': changes_laki[i],
-                '% Δ Perempuan': changes_perempuan[i]
-            })
     
+    if not pred_data:
+        st.error("Tidak dapat membuat prediksi karena data tidak cukup")
+        st.stop()
+        
     pred_df = pd.DataFrame(pred_data)
     
     # Display predictions
-    st.header(f"Hasil Prediksi {last_year+1} - {last_year+3}")
+    st.header("Hasil Prediksi 2024-2026")
     
     # Age group selector
     selected_group = st.selectbox(
@@ -144,7 +163,7 @@ def app():
     
     cols = st.columns(3)
     with cols[0]:
-        for i, year in enumerate([last_year+1, last_year+2, last_year+3]):
+        for i, year in enumerate([2024, 2025, 2026]):
             st.metric(
                 f"Prediksi {selected_group} {year}", 
                 f"{group_pred[group_pred['Tahun'] == year]['Total'].values[0]:,.0f}",
@@ -152,7 +171,7 @@ def app():
             )
     
     with cols[1]:
-        for i, year in enumerate([last_year+1, last_year+2, last_year+3]):
+        for i, year in enumerate([2024, 2025, 2026]):
             st.metric(
                 f"Prediksi {selected_group} {year}", 
                 f"{group_pred[group_pred['Tahun'] == year]['Laki-laki'].values[0]:,.0f}",
@@ -160,7 +179,7 @@ def app():
             )
     
     with cols[2]:
-        for i, year in enumerate([last_year+1, last_year+2, last_year+3]):
+        for i, year in enumerate([2024, 2025, 2026]):
             st.metric(
                 f"Prediksi {selected_group} {year}", 
                 f"{group_pred[group_pred['Tahun'] == year]['Perempuan'].values[0]:,.0f}",
@@ -202,128 +221,79 @@ def app():
         '60+': '#e74c3c'
     }
 
-    # Historical data
-    for age in age_categories:
-        age_data = combined_df[(combined_df['Type'] == 'Historical') & 
-                            (combined_df['kategori_usia'] == age)]
+    # Add traces for each age category
+    for age_cat in age_categories:
+        # Historical data
+        hist_data = combined_df[(combined_df['kategori_usia'] == age_cat) & (combined_df['Type'] == 'Historical')]
+        if not hist_data.empty:
+            fig.add_trace(go.Scatter(
+                x=hist_data['id_tahun'],
+                y=hist_data['total'],
+                mode='lines+markers',
+                name=f'{age_cat} (Historical)',
+                line=dict(color=age_colors[age_cat], width=3),
+                marker=dict(size=8)
+            ))
         
-        fig.add_trace(go.Bar(
-            x=age_data['id_tahun'],
-            y=age_data['total'],
-            name=f'{age} (Historical)',
-            marker_color=age_colors[age],
-            text=age_data['total'].apply(lambda x: f"{x:,.0f}"),
-            textposition='auto',
-            opacity=0.7
-        ))
-
-    # Predicted data
-    for age in age_categories:
-        age_data = combined_df[(combined_df['Type'] == 'Predicted') & 
-                            (combined_df['kategori_usia'] == age)]
-        
-        fig.add_trace(go.Bar(
-            x=age_data['id_tahun'],
-            y=age_data['total'],
-            name=f'{age} (Predicted)',
-            marker_color=age_colors[age],
-            text=age_data['total'].apply(lambda x: f"{x:,.0f}"),
-            textposition='auto',
-            marker_line_color='rgb(0,0,0)',
-            marker_line_width=1.5,
-            opacity=0.9
-        ))
+        # Predicted data
+        pred_data = combined_df[(combined_df['kategori_usia'] == age_cat) & (combined_df['Type'] == 'Predicted')]
+        if not pred_data.empty:
+            fig.add_trace(go.Scatter(
+                x=pred_data['id_tahun'],
+                y=pred_data['total'],
+                mode='lines+markers',
+                name=f'{age_cat} (Predicted)',
+                line=dict(color=age_colors[age_cat], width=3, dash='dash'),
+                marker=dict(size=8, symbol='diamond')
+            ))
 
     fig.update_layout(
-        barmode='group',
-        title='Perkembangan Penduduk per Kelompok Umur',
+        title='Trend Jumlah Penduduk per Kelompok Umur (Historikal & Prediksi)',
         xaxis_title='Tahun',
         yaxis_title='Jumlah Penduduk',
-        legend_title="Kelompok Umur",
         hovermode='x unified',
-        bargap=0.15,
-        bargroupgap=0.1
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+    # Display prediction table
+    st.header("Tabel Prediksi Detail")
     
-    # Display historical data
-    st.subheader("Data Historis")
-
-    # Daftar kolom yang ingin ditampilkan
-    columns_to_show = [
-        'id_tahun',
-        'kategori_usia',
-        'laki_laki',
-        'perempuan',
-        'total',
-        '% Perubahan laki_laki',
-        '% Perubahan perempuan',
-        '% Perubahan total'
-    ]
-
-    # Filter kolom yang akan ditampilkan (exclude id_penduduk_usia)
-    formatted_df = (
-        df[columns_to_show]  # Hanya ambil kolom yang ingin ditampilkan
-        .rename(columns={
-            'id_tahun': 'Tahun',
-            'kategori_usia': 'Kelompok Umur',
-            'laki_laki': 'Laki-laki',
-            'perempuan': 'Perempuan',
-            'total': 'Total',
-            '% Perubahan laki_laki': '% Δ Laki-laki',  # Konsistenkan rename
-            '% Perubahan perempuan': '% Δ Perempuan',
-            '% Perubahan total': '% Δ Total'
-        })
-        .reset_index(drop=True)  # Reset index
-    )
-
-    # Format nilai numerik
     def format_value(x, is_pct=False):
         if pd.isna(x):
-            return ""
+            return "-"
         if is_pct:
-            return f"{float(x):+.1f}%"
-        return f"{float(x):,.0f}"
-
-    # Terapkan formatting
-    formatted_df['Tahun'] = formatted_df['Tahun'].astype(str)  
-    formatted_df['Laki-laki'] = formatted_df['Laki-laki'].apply(lambda x: format_value(x))
-    formatted_df['Perempuan'] = formatted_df['Perempuan'].apply(lambda x: format_value(x))
-    formatted_df['Total'] = formatted_df['Total'].apply(lambda x: format_value(x))
-
-    # Format kolom persentase jika ada
-    pct_cols = ['% Δ Laki-laki', '% Δ Perempuan', '% Δ Total']
-    for col in pct_cols:
-        if col in formatted_df.columns:
-            formatted_df[col] = formatted_df[col].apply(lambda x: format_value(x, is_pct=True))
-
-    # Fungsi styling
+            return f"{x:.1f}%"
+        return f"{x:,.0f}"
+    
     def style_negative_positive(val):
-        if not isinstance(val, str) or len(val) == 0:
+        if pd.isna(val):
             return ''
-        if (val.startswith('+') or val[0].isdigit()) and '%' in val:
-            color = '#2ecc71'
-        elif val.startswith('-') and '%' in val:
-            color = '#e74c3c'
-        else:
-            return ''
-        return f'color: {color}'
+        if isinstance(val, str) and '%' in val:
+            val = float(val.replace('%', ''))
+        if val < 0:
+            return 'color: red'
+        elif val > 0:
+            return 'color: green'
+        return ''
 
-    # Terapkan styling
-    styled_df = (
-        formatted_df
-        .style
-        .applymap(style_negative_positive)
-        .format(None, na_rep="")
-    )
+    # Style the prediction table
+    styled_pred_df = pred_df.copy()
+    for col in ['Total', 'Laki-laki', 'Perempuan']:
+        styled_pred_df[col] = styled_pred_df[col].apply(lambda x: format_value(x))
+    for col in ['% Δ Total', '% Δ Laki', '% Δ Perempuan']:
+        styled_pred_df[col] = styled_pred_df[col].apply(lambda x: format_value(x, is_pct=True))
 
-    # Tampilkan tabel
     st.dataframe(
-        styled_df,
-        use_container_width=True,
-        height=600,
-        hide_index=True
+        styled_pred_df.style.applymap(style_negative_positive, subset=['% Δ Total', '% Δ Laki', '% Δ Perempuan']),
+        use_container_width=True
     )
 
     st.write("*% Δ Laki-laki : presentase perubahan jumlah laki-laki dari data sebelumnya")

@@ -144,7 +144,7 @@ def app():
     # Terapkan styling
     styled_df = (
         display_df.style
-        .applymap(style_negative_positive, subset=["Perubahan (%)"])
+        .map(style_negative_positive, subset=["Perubahan (%)"])
         .format(None, na_rep="")  # Handle nilai kosong
         .set_properties(**{
             'text-align': 'center',

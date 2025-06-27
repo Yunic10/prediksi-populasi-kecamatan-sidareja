@@ -205,7 +205,7 @@ def app():
     
     # Display the table with styling
     st.dataframe(
-        hist_df.style.applymap(style_negative_positive, subset=pct_cols),
+        hist_df.style.map(style_negative_positive, subset=pct_cols),
         use_container_width=True,
         hide_index=True
     )

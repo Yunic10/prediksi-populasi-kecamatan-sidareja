@@ -1,0 +1,23 @@
+credentials:
+  usernames:
+    admin:
+      email: admin@sidareja.com
+      name: Administrator
+      password: $2b$12$76GQENYFGKoiUxuW6M8It.ycVJ1VMm4eyvLQIf3RVzAOUCuYtOl5O
+    user1:
+      email: user1@sidareja.com
+      name: User Satu
+      password: $2b$12$76GQENYFGKoiUxuW6M8It.ycVJ1VMm4eyvLQIf3RVzAOUCuYtOl5O
+    user2:
+      email: user2@sidareja.com
+      name: User Dua
+      password: $2b$12$76GQENYFGKoiUxuW6M8It.ycVJ1VMm4eyvLQIf3RVzAOUCuYtOl5O
+cookie:
+  expiry_days: 30
+  key: 'some_signature_key'
+  name: 'some_cookie_name'
+preauthorized:
+  emails:
+  - admin@sidareja.com
+  - user1@sidareja.com
+  - user2@sidareja.com 

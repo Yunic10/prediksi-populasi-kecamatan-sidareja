@@ -243,7 +243,7 @@ def app():
             return 'color: #2ecc71'
         return ''
 
-    styled_df = final_df_str.style.applymap(color_negative_red)
+    styled_df = final_df_str.style.map(color_negative_red)
 
     # Display the table
     st.dataframe(
