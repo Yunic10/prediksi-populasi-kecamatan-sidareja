@@ -4,13 +4,13 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from model import train_svm_model, predict_population
-from data_utils import load_penduduk_usia_data
+from data_penduduk_usia import get_all_age_population_data
 
 @st.cache_data
 def fetch_population_data():
-    """Fetch population data dengan caching"""
+    """Fetch population data dari Supabase dengan caching"""
     try:
-        df = load_penduduk_usia_data()
+        df = get_all_age_population_data()
         if not df.empty:
             # Pastikan kolom id_tahun ada dan bertipe int
             if 'id_tahun' in df.columns:
@@ -42,7 +42,7 @@ def app():
         st.stop()
     
     # Tampilkan info data
-    st.info(f"Data yang dimuat: {len(df)} baris dari file CSV")
+    st.info(f"Data yang dimuat: {len(df)} baris dari database Supabase")
     
     # Get unique age groups
     age_groups = df['kategori_usia'].unique() if 'kategori_usia' in df.columns else []
