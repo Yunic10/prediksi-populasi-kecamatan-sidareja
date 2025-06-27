@@ -3,14 +3,17 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from model import train_svm_model, predict_population
-from data_penduduk_usia import get_all_age_population_data
+from model import fetch_data, train_svm_model, predict_population
 
 @st.cache_data
 def fetch_population_data():
     """Fetch population data dari Supabase dengan caching"""
     try:
-        df = get_all_age_population_data()
+        df = fetch_data(
+            table_name="penduduk_usia",
+            feature_columns=["id_tahun"],
+            target_columns=["kategori_usia", "laki_laki", "perempuan", "total"]
+        )
         if not df.empty:
             # Pastikan kolom id_tahun ada dan bertipe int
             if 'id_tahun' in df.columns:
