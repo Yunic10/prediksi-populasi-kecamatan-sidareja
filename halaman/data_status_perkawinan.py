@@ -130,7 +130,7 @@ def app():
         with col3:
             cerai_hidup = st.number_input("", value=int(row["cerai_hidup"]), key=f"cerai_{index}", label_visibility='collapsed', step=1, format="%d")
         with col4:
-            if st.button(f"Hapus {row['id_tahun']}", key=f"hapus_{index}"):
+            if st.button("Hapus", key=f"hapus_{index}"):
                 confirm_delete(int(row["id_tahun"]))  # Konversi ke integer
 
         # Jika ada perubahan data, tampilkan dialog konfirmasi update
@@ -139,16 +139,25 @@ def app():
             confirm_update(row["id_tahun"], status_kawin, cerai_hidup)
 
     # Form untuk menambahkan data baru
-    st.write("Tambah Data")
-    tahun_baru = st.number_input("Masukkan tahun", min_value=2024, max_value=3000, step=1, format="%d")
-    status_kawin = st.number_input("Jumlah Status Kawin", min_value=0, step=1)
-    cerai_hidup = st.number_input("Jumlah Cerai Hidup", min_value=0, step=1)
-
-    if st.button("Tambah Data"):
-        if status_kawin == 0 or cerai_hidup == 0:
-            st.error("Jumlah Status tidak boleh nol!")
-        elif check_year_exists(tahun_baru):
-            st.error(f"Data kepala status_perkawinan untuk tahun {tahun_baru} sudah ada!")
-        else:
-            add_year_if_not_exists(tahun_baru)
-            confirm_tambah(tahun_baru, status_kawin, cerai_hidup)
+    st.subheader("Tambah Data Baru")
+    with st.form("add_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            tahun_baru = st.number_input("Masukkan tahun", min_value=2024, max_value=3000, step=1, format="%d")
+        with col2:
+            st.write("")  # Spacer
+        
+        col3, col4 = st.columns(2)
+        with col3:
+            status_kawin = st.number_input("Jumlah Status Kawin", min_value=0, step=1)
+        with col4:
+            cerai_hidup = st.number_input("Jumlah Cerai Hidup", min_value=0, step=1)
+        
+        if st.form_submit_button("Tambah Data"):
+            if status_kawin == 0 and cerai_hidup == 0:
+                st.error("Jumlah status tidak boleh nol!")
+            elif check_year_exists(tahun_baru):
+                st.error(f"Data status perkawinan untuk tahun {tahun_baru} sudah ada!")
+            else:
+                add_year_if_not_exists(tahun_baru)
+                confirm_tambah(tahun_baru, status_kawin, cerai_hidup)

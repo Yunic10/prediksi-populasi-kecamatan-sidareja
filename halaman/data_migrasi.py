@@ -130,7 +130,7 @@ def app():
         with col3:
             migrasi_keluar = st.number_input("", value=int(row["migrasi_keluar"]), key=f"Keluar_{index}", label_visibility='collapsed', step=1, format="%d")
         with col4:
-            if st.button(f"Hapus {row['id_tahun']}", key=f"hapus_{index}"):
+            if st.button("Hapus", key=f"hapus_{index}"):
                 confirm_delete(int(row["id_tahun"]))  # Konversi ke integer
 
         # Jika ada perubahan data, tampilkan dialog konfirmasi update
@@ -139,16 +139,25 @@ def app():
             confirm_update(row["id_tahun"], migrasi_masuk, migrasi_keluar)
 
     # Form untuk menambahkan data baru
-    st.write("Tambah Data")
-    tahun_baru = st.number_input("Masukkan tahun", min_value=2024, max_value=3000, step=1, format="%d")
-    migrasi_masuk = st.number_input("Jumlah Migrasi Masuk", min_value=0, step=1)
-    migrasi_keluar = st.number_input("Jumlah Migrasi Keluar", min_value=0, step=1)
-
-    if st.button("Tambah Data"):
-        if migrasi_masuk == 0 or migrasi_keluar == 0:
-            st.error("Jumlah migrasi masuk tidak boleh nol!")
-        elif check_year_exists(tahun_baru):
-            st.error(f"Data migrasi untuk tahun {tahun_baru} sudah ada!")
-        else:
-            add_year_if_not_exists(tahun_baru)
-            confirm_tambah(tahun_baru, migrasi_masuk, migrasi_keluar)
+    st.subheader("Tambah Data Baru")
+    with st.form("add_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            tahun_baru = st.number_input("Masukkan tahun", min_value=2024, max_value=3000, step=1, format="%d")
+        with col2:
+            st.write("")  # Spacer
+        
+        col3, col4 = st.columns(2)
+        with col3:
+            migrasi_masuk = st.number_input("Jumlah Migrasi Masuk", min_value=0, step=1)
+        with col4:
+            migrasi_keluar = st.number_input("Jumlah Migrasi Keluar", min_value=0, step=1)
+        
+        if st.form_submit_button("Tambah Data"):
+            if migrasi_masuk == 0 and migrasi_keluar == 0:
+                st.error("Jumlah migrasi tidak boleh nol!")
+            elif check_year_exists(tahun_baru):
+                st.error(f"Data migrasi untuk tahun {tahun_baru} sudah ada!")
+            else:
+                add_year_if_not_exists(tahun_baru)
+                confirm_tambah(tahun_baru, migrasi_masuk, migrasi_keluar)

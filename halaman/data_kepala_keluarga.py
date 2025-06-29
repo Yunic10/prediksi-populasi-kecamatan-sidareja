@@ -85,24 +85,25 @@ def app():
     df = get_population_data()
 
     # Tampilkan tabel dengan tombol hapus per baris
-    col1, col2, col3, col4, col5 = st.columns([1, 3, 2, 2, 2])
+    col1, col2, col3, col4, col5, col6 = st.columns([1, 2, 2, 2, 2, 2])
     with col1:
         st.write("Tahun")
     with col2:
-        st.write("Jumlah Kepala Keluarga")
-    with col3:
         st.write("Pria")
-    with col4:
+    with col3:
         st.write("Wanita")
+    with col4:
+        st.write("Total")
     with col5:
         st.write("Hapus")
 
     # Dialog untuk konfirmasi update
     @st.dialog("Konfirmasi Perubahan")
-    def confirm_update(id_tahun, jumlah_kepala_keluarga, pria, wanita):
+    def confirm_update(id_tahun, pria, wanita):
+        total = pria + wanita
         st.write(f"Apakah Anda yakin ingin memperbarui data untuk tahun {id_tahun}?")
         if st.button("Ya, Perbarui"):
-            update_population_data(id_tahun, jumlah_kepala_keluarga, pria, wanita)
+            update_population_data(id_tahun, total, pria, wanita)
             st.rerun()
 
     # Dialog untuk konfirmasi hapus
@@ -115,10 +116,11 @@ def app():
 
     # Dialog untuk konfirmasi tambah
     @st.dialog("Konfirmasi Penambahan")
-    def confirm_tambah(tahun_baru, jumlah_kepala_keluarga, pria, wanita):
+    def confirm_tambah(tahun_baru, pria, wanita):
+        total = pria + wanita
         st.write(f"Apakah Anda yakin ingin menambahkan data untuk tahun {tahun_baru}?")
         if st.button("Ya, Tambah"):
-            success, message = add_population_data(tahun_baru, jumlah_kepala_keluarga, pria, wanita)
+            success, message = add_population_data(tahun_baru, total, pria, wanita)
             if success:
                 st.success(message)
             else:
@@ -130,34 +132,45 @@ def app():
         with col1:
             tahun = st.number_input("", value=int(row["id_tahun"]), key=f"tahun{index}", label_visibility='collapsed', step=1, format="%d")
         with col2:
-            jumlah_kepala_keluarga = st.number_input("", value=int(row["jumlah_kepala_keluarga"]), key=f"jumlah_{index}", label_visibility='collapsed', step=1, format="%d")
-        with col3:
             pria = st.number_input("", value=int(row["pria"]), key=f"Pria_{index}", label_visibility='collapsed', step=1, format="%d")
-        with col4:
+        with col3:
             wanita = st.number_input("", value=int(row["wanita"]), key=f"Wanita_{index}", label_visibility='collapsed', step=1, format="%d")
+        with col4:
+            # Hitung total otomatis dan tampilkan
+            total_otomatis = pria + wanita
+            total_display = st.number_input("", value=total_otomatis, key=f"total_{index}", label_visibility='collapsed', step=1, format="%d", disabled=True)
         with col5:
-            if st.button(f"Hapus {row['id_tahun']}", key=f"hapus_{index}"):
+            if st.button("Hapus", key=f"hapus_{index}"):
                 confirm_delete(int(row["id_tahun"]))  # Konversi ke integer
 
         # Jika ada perubahan data, tampilkan dialog konfirmasi update
-        if (jumlah_kepala_keluarga != row["jumlah_kepala_keluarga"] or
-            pria != row["pria"] or
-            wanita != row["wanita"]):
-            confirm_update(row["id_tahun"], jumlah_kepala_keluarga, pria, wanita)
+        if (pria != row["pria"] or wanita != row["wanita"]):
+            confirm_update(row["id_tahun"], pria, wanita)
 
     # Form untuk menambahkan data baru
-    st.write("Tambah Data")
-    tahun_baru = st.number_input("Masukkan tahun", min_value=2024, max_value=3000, step=1, format="%d")
-    pria = st.number_input("Jumlah Kepala Keluarga Pria", min_value=0, step=1)
-    wanita = st.number_input("Jumlah Kepala Keluarga Wanita", min_value=0, step=1)
-    jumlah_kepala_keluarga = pria + wanita
-    st.write(f"Jumlah kepala keluarga (Otomatis): **{jumlah_kepala_keluarga}**")
-
-    if st.button("Tambah Data"):
-        if jumlah_kepala_keluarga == 0:
-            st.error("Jumlah kepala keluarga tidak boleh nol!")
-        elif check_year_exists(tahun_baru):
-            st.error(f"Data kepala keluarga untuk tahun {tahun_baru} sudah ada!")
-        else:
-            add_year_if_not_exists(tahun_baru)
-            confirm_tambah(tahun_baru, jumlah_kepala_keluarga, pria, wanita)
+    st.subheader("Tambah Data Baru")
+    with st.form("add_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            tahun_baru = st.number_input("Masukkan tahun", min_value=2024, max_value=3000, step=1, format="%d")
+        with col2:
+            st.write("")  # Spacer
+        
+        col3, col4 = st.columns(2)
+        with col3:
+            pria = st.number_input("Jumlah Kepala Keluarga Pria", min_value=0, step=1)
+        with col4:
+            wanita = st.number_input("Jumlah Kepala Keluarga Wanita", min_value=0, step=1)
+        
+        # Hitung total otomatis
+        jumlah_kepala_keluarga = pria + wanita
+        st.write(f"**Total Jumlah Kepala Keluarga:** {jumlah_kepala_keluarga}")
+        
+        if st.form_submit_button("Tambah Data"):
+            if jumlah_kepala_keluarga == 0:
+                st.error("Jumlah kepala keluarga tidak boleh nol!")
+            elif check_year_exists(tahun_baru):
+                st.error(f"Data kepala keluarga untuk tahun {tahun_baru} sudah ada!")
+            else:
+                add_year_if_not_exists(tahun_baru)
+                confirm_tambah(tahun_baru, pria, wanita)

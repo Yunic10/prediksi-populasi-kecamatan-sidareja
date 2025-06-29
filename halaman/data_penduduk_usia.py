@@ -180,7 +180,7 @@ def app():
         with col5:
             total = st.number_input("", value=int(row["total"]), key=f"total_{index}", label_visibility='collapsed', step=1, format="%d", disabled=True)
         with col6:
-            if st.button("🗑️", key=f"hapus_{index}"):
+            if st.button("Hapus", key=f"hapus_{index}"):
                 confirm_delete(int(row["id_tahun"]), row["kategori_usia"])
 
         # Jika ada perubahan data
