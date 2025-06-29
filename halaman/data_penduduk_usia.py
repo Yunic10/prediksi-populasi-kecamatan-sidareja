@@ -43,6 +43,12 @@ def check_year_and_category_exists(id_tahun, kategori_usia):
                  .execute()
     return len(response.data) > 0
 
+def check_year_exists(id_tahun):
+    response = supabase.table("penduduk_usia").select("id_tahun")\
+                 .eq("id_tahun", id_tahun)\
+                 .execute()
+    return len(response.data) > 0
+
 def add_age_population_data(id_tahun, kategori_usia, laki_laki, perempuan):
     try:
         total = laki_laki + perempuan
@@ -54,6 +60,30 @@ def add_age_population_data(id_tahun, kategori_usia, laki_laki, perempuan):
             "total": int(total)
         }).execute()
         return bool(response.data), "Data berhasil ditambahkan!" if response.data else "Gagal menambahkan data"
+    except Exception as e:
+        return False, f"Gagal menambahkan data: {str(e)}"
+
+def add_all_age_population_data(id_tahun, data_0_14, data_15_60, data_60_plus):
+    """
+    Menambahkan data untuk semua kategori usia sekaligus
+    data_0_14: dict dengan keys 'laki_laki', 'perempuan'
+    data_15_60: dict dengan keys 'laki_laki', 'perempuan'  
+    data_60_plus: dict dengan keys 'laki_laki', 'perempuan'
+    """
+    try:
+        # Tambahkan data untuk kategori 0-14
+        success1, msg1 = add_age_population_data(id_tahun, "0-14", data_0_14['laki_laki'], data_0_14['perempuan'])
+        
+        # Tambahkan data untuk kategori 15-60
+        success2, msg2 = add_age_population_data(id_tahun, "15-60", data_15_60['laki_laki'], data_15_60['perempuan'])
+        
+        # Tambahkan data untuk kategori 60+
+        success3, msg3 = add_age_population_data(id_tahun, "60+", data_60_plus['laki_laki'], data_60_plus['perempuan'])
+        
+        if success1 and success2 and success3:
+            return True, "Data untuk semua kategori usia berhasil ditambahkan!"
+        else:
+            return False, f"Gagal menambahkan data: {msg1}, {msg2}, {msg3}"
     except Exception as e:
         return False, f"Gagal menambahkan data: {str(e)}"
 
@@ -121,6 +151,25 @@ def confirm_tambah(new_year, age_group, males, females):
             st.error(message)
         st.rerun()
 
+@st.dialog("Konfirmasi Penambahan Semua Kategori")
+def confirm_tambah_semua(new_year, data_0_14, data_15_60, data_60_plus):
+    st.write(f"Apakah Anda yakin ingin menambahkan data untuk tahun {new_year} untuk semua kategori usia?")
+    st.write("**Data yang akan ditambahkan:**")
+    st.write(f"- 0-14: Laki-laki {data_0_14['laki_laki']}, Perempuan {data_0_14['perempuan']}")
+    st.write(f"- 15-60: Laki-laki {data_15_60['laki_laki']}, Perempuan {data_15_60['perempuan']}")
+    st.write(f"- 60+: Laki-laki {data_60_plus['laki_laki']}, Perempuan {data_60_plus['perempuan']}")
+    
+    if st.button("Ya, Tambah Semua"):
+        success, message = add_all_age_population_data(new_year, data_0_14, data_15_60, data_60_plus)
+        if success:
+            st.success(message)
+            st.session_state.page = 1
+            # Reset form setelah berhasil menambah data
+            st.session_state.form_key += 1
+        else:
+            st.error(message)
+        st.rerun()
+
 # Main App
 def app():
     st.header("Data Penduduk Berdasarkan Kelompok Umur")
@@ -176,7 +225,8 @@ def app():
         with col1:
             tahun = st.number_input("", value=int(row["id_tahun"]), key=f"tahun{index}", label_visibility='collapsed', step=1, format="%d")
         with col2:
-            kategori_usia = st.selectbox("", AGE_GROUPS, index=AGE_GROUPS.index(row["kategori_usia"]), key=f"kategori_{index}", label_visibility='collapsed')
+            # Disable kategori usia - hanya tampilkan sebagai text
+            st.write(row["kategori_usia"])
         with col3:
             laki_laki = st.number_input("", value=int(row["laki_laki"]), key=f"laki_{index}", label_visibility='collapsed', step=1, format="%d")
         with col4:
@@ -187,40 +237,65 @@ def app():
             if st.button("Hapus", key=f"hapus_{index}"):
                 confirm_delete(int(row["id_tahun"]), row["kategori_usia"])
 
-        # Jika ada perubahan data
-        if (tahun != row["id_tahun"] or 
-            kategori_usia != row["kategori_usia"] or 
-            laki_laki != row["laki_laki"] or 
-            perempuan != row["perempuan"]):
-            confirm_update(row["id_tahun"], kategori_usia, laki_laki, perempuan)
+        # Jika ada perubahan data (hanya laki-laki dan perempuan, bukan kategori usia)
+        if (laki_laki != row["laki_laki"] or perempuan != row["perempuan"]):
+            confirm_update(row["id_tahun"], row["kategori_usia"], laki_laki, perempuan)
     
-    # Add new data form
-    st.subheader("Tambah Data Baru")
+    # Add new data form - Form untuk mengisi 3 kategori usia sekaligus
+    st.subheader("Tambah Data Baru (Semua Kategori Usia)")
     with st.form(f"add_form_{st.session_state.form_key}"):
+        # Input tahun
+        new_year = st.number_input("Tahun", min_value=2000, max_value=2100, step=1, key=f"year_input_{st.session_state.form_key}")
+        
+        # Kategori 0-14
+        st.write("**Kategori Usia 0-14**")
         col1, col2 = st.columns(2)
         with col1:
-            new_year = st.number_input("Tahun", min_value=2000, max_value=2100, step=1, key=f"year_input_{st.session_state.form_key}")
+            males_0_14 = st.number_input("Laki-laki (0-14)", min_value=0, step=1, key=f"males_0_14_{st.session_state.form_key}")
         with col2:
-            age_group = st.selectbox("Kelompok Umur", AGE_GROUPS, key=f"age_input_{st.session_state.form_key}")
+            females_0_14 = st.number_input("Perempuan (0-14)", min_value=0, step=1, key=f"females_0_14_{st.session_state.form_key}")
         
+        total_0_14 = males_0_14 + females_0_14
+        st.write(f"Total 0-14: {total_0_14}")
+        
+        # Kategori 15-60
+        st.write("**Kategori Usia 15-60**")
         col3, col4 = st.columns(2)
         with col3:
-            males = st.number_input("Laki-laki", min_value=0, step=1, key=f"males_input_{st.session_state.form_key}")
+            males_15_60 = st.number_input("Laki-laki (15-60)", min_value=0, step=1, key=f"males_15_60_{st.session_state.form_key}")
         with col4:
-            females = st.number_input("Perempuan", min_value=0, step=1, key=f"females_input_{st.session_state.form_key}")
+            females_15_60 = st.number_input("Perempuan (15-60)", min_value=0, step=1, key=f"females_15_60_{st.session_state.form_key}")
         
-        total = males + females
-        st.write(f"**Total Penduduk:** {total}")
+        total_15_60 = males_15_60 + females_15_60
+        st.write(f"Total 15-60: {total_15_60}")
         
-        if st.form_submit_button("Tambah Data"):
-            if total == 0:
+        # Kategori 60+
+        st.write("**Kategori Usia 60+**")
+        col5, col6 = st.columns(2)
+        with col5:
+            males_60_plus = st.number_input("Laki-laki (60+)", min_value=0, step=1, key=f"males_60_plus_{st.session_state.form_key}")
+        with col6:
+            females_60_plus = st.number_input("Perempuan (60+)", min_value=0, step=1, key=f"females_60_plus_{st.session_state.form_key}")
+        
+        total_60_plus = males_60_plus + females_60_plus
+        st.write(f"Total 60+: {total_60_plus}")
+        
+        # Total keseluruhan
+        total_all = total_0_14 + total_15_60 + total_60_plus
+        st.write(f"**Total Keseluruhan: {total_all}**")
+        
+        if st.form_submit_button("Tambah Data Semua Kategori"):
+            if total_all == 0:
                 st.error("Total penduduk tidak boleh 0")
-            elif check_year_and_category_exists(new_year, age_group):
-                st.error(f"Data untuk tahun {new_year} dan kelompok {age_group} sudah ada!")
+            elif check_year_exists(new_year):
+                st.error(f"Data untuk tahun {new_year} sudah ada!")
             else:
-                confirm_tambah(new_year, age_group, males, females)
-                # Reset form setelah berhasil menambah data
-                st.session_state.form_key += 1
+                # Siapkan data untuk setiap kategori
+                data_0_14 = {'laki_laki': males_0_14, 'perempuan': females_0_14}
+                data_15_60 = {'laki_laki': males_15_60, 'perempuan': females_15_60}
+                data_60_plus = {'laki_laki': males_60_plus, 'perempuan': females_60_plus}
+                
+                confirm_tambah_semua(new_year, data_0_14, data_15_60, data_60_plus)
 
 # if __name__ == "__main__":
 #     app()
