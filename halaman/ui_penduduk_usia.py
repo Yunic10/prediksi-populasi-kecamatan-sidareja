@@ -282,9 +282,9 @@ def app():
         if isinstance(val, str) and '%' in val:
             val = float(val.replace('%', ''))
         if val < 0:
-            return 'color: red'
+            return 'color: #e74c3c'
         elif val > 0:
-            return 'color: green'
+            return 'color: #2ecc71'
         return ''
 
     # Style the prediction table
