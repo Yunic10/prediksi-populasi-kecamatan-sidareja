@@ -77,6 +77,10 @@ def app():
     st.header("Data Jumlah Putus Sekolah")
     st.title("Manajemen Data Putus Sekolah")
 
+    # Inisialisasi session state untuk form reset
+    if 'form_key' not in st.session_state:
+        st.session_state.form_key = 0
+
     # Ambil data kepala putus_sekolah
     df = get_population_data()
 
@@ -113,6 +117,8 @@ def app():
             success, message = add_population_data(tahun_baru, jumlah_putus_sekolah)
             if success:
                 st.success(message)
+                # Reset form setelah berhasil menambah data
+                st.session_state.form_key += 1
             else:
                 st.error(message)
             st.rerun()
@@ -133,16 +139,16 @@ def app():
 
     # Form untuk menambahkan data baru
     st.subheader("Tambah Data Baru")
-    with st.form("add_form"):
+    with st.form(f"add_form_{st.session_state.form_key}"):
         col1, col2 = st.columns(2)
         with col1:
-            tahun_baru = st.number_input("Masukkan tahun", min_value=2024, max_value=3000, step=1, format="%d")
+            tahun_baru = st.number_input("Masukkan tahun", min_value=2024, max_value=3000, step=1, format="%d", key=f"tahun_input_{st.session_state.form_key}")
         with col2:
             st.write("")  # Spacer
         
         col3, col4 = st.columns(2)
         with col3:
-            jumlah_putus_sekolah = st.number_input("Jumlah Putus Sekolah", min_value=0, step=1)
+            jumlah_putus_sekolah = st.number_input("Jumlah Putus Sekolah", min_value=0, step=1, key=f"putus_input_{st.session_state.form_key}")
         with col4:
             st.write("")  # Spacer
         

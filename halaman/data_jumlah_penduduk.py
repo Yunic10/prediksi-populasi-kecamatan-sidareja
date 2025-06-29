@@ -81,6 +81,10 @@ def app():
     st.header("Data Jumlah Penduduk")
     st.title("Manajemen Data Penduduk")
 
+    # Inisialisasi session state untuk form reset
+    if 'form_key' not in st.session_state:
+        st.session_state.form_key = 0
+
     # Ambil data penduduk
     df = get_population_data()
 
@@ -123,6 +127,8 @@ def app():
             success, message = add_population_data(tahun_baru, total, laki_laki, perempuan)
             if success:
                 st.success(message)
+                # Reset form setelah berhasil menambah data
+                st.session_state.form_key += 1
             else:
                 st.error(message)
             st.rerun()
@@ -149,18 +155,18 @@ def app():
 
     # Form untuk menambahkan data baru
     st.subheader("Tambah Data Baru")
-    with st.form("add_form"):
+    with st.form(f"add_form_{st.session_state.form_key}"):
         col1, col2 = st.columns(2)
         with col1:
-            tahun_baru = st.number_input("Masukkan tahun", min_value=2024, max_value=3000, step=1, format="%d")
+            tahun_baru = st.number_input("Masukkan tahun", min_value=2024, max_value=3000, step=1, format="%d", key=f"tahun_input_{st.session_state.form_key}")
         with col2:
             st.write("")  # Spacer
         
         col3, col4 = st.columns(2)
         with col3:
-            laki_laki = st.number_input("Jumlah Laki-laki", min_value=0, step=1)
+            laki_laki = st.number_input("Jumlah Laki-laki", min_value=0, step=1, key=f"laki_input_{st.session_state.form_key}")
         with col4:
-            perempuan = st.number_input("Jumlah Perempuan", min_value=0, step=1)
+            perempuan = st.number_input("Jumlah Perempuan", min_value=0, step=1, key=f"perempuan_input_{st.session_state.form_key}")
         
         # Hitung total otomatis
         jumlah_penduduk = laki_laki + perempuan

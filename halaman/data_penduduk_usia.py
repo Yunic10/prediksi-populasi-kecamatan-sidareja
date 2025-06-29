@@ -125,6 +125,10 @@ def confirm_tambah(new_year, age_group, males, females):
 def app():
     st.header("Data Penduduk Berdasarkan Kelompok Umur")
     
+    # Inisialisasi session state untuk form reset
+    if 'form_key' not in st.session_state:
+        st.session_state.form_key = 0
+    
     # Tambahkan checkbox untuk tampilkan semua data
     show_all = st.checkbox("Tampilkan Semua Data", value=False)
     
@@ -192,18 +196,18 @@ def app():
     
     # Add new data form
     st.subheader("Tambah Data Baru")
-    with st.form("add_form"):
+    with st.form(f"add_form_{st.session_state.form_key}"):
         col1, col2 = st.columns(2)
         with col1:
-            new_year = st.number_input("Tahun", min_value=2000, max_value=2100, step=1)
+            new_year = st.number_input("Tahun", min_value=2000, max_value=2100, step=1, key=f"year_input_{st.session_state.form_key}")
         with col2:
-            age_group = st.selectbox("Kelompok Umur", AGE_GROUPS)
+            age_group = st.selectbox("Kelompok Umur", AGE_GROUPS, key=f"age_input_{st.session_state.form_key}")
         
         col3, col4 = st.columns(2)
         with col3:
-            males = st.number_input("Laki-laki", min_value=0, step=1)
+            males = st.number_input("Laki-laki", min_value=0, step=1, key=f"males_input_{st.session_state.form_key}")
         with col4:
-            females = st.number_input("Perempuan", min_value=0, step=1)
+            females = st.number_input("Perempuan", min_value=0, step=1, key=f"females_input_{st.session_state.form_key}")
         
         total = males + females
         st.write(f"**Total Penduduk:** {total}")
@@ -215,6 +219,8 @@ def app():
                 st.error(f"Data untuk tahun {new_year} dan kelompok {age_group} sudah ada!")
             else:
                 confirm_tambah(new_year, age_group, males, females)
+                # Reset form setelah berhasil menambah data
+                st.session_state.form_key += 1
 
 # if __name__ == "__main__":
 #     app()
