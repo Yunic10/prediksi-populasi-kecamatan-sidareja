@@ -225,7 +225,9 @@ def app():
         with col1:
             tahun = st.number_input("", value=int(row["id_tahun"]), key=f"tahun{index}", label_visibility='collapsed', step=1, format="%d")
         with col2:
-            # Disable kategori usia - hanya tampilkan sebagai text
+            # Disable kategori usia seperti kolom total
+            kategori_usia = st.number_input("", value=0, key=f"kategori_{index}", label_visibility='collapsed', step=1, format="%d", disabled=True)
+            # Tampilkan teks kategori usia di atas input yang disabled
             st.write(row["kategori_usia"])
         with col3:
             laki_laki = st.number_input("", value=int(row["laki_laki"]), key=f"laki_{index}", label_visibility='collapsed', step=1, format="%d")
@@ -285,8 +287,15 @@ def app():
         st.write(f"**Total Keseluruhan: {total_all}**")
         
         if st.form_submit_button("Tambah Data Semua Kategori"):
-            if total_all == 0:
-                st.error("Total penduduk tidak boleh 0")
+            # Validasi: semua kategori harus memiliki jumlah minimal 1
+            if total_0_14 == 0:
+                st.error("Jumlah penduduk kategori 0-14 tidak boleh kosong atau nol!")
+            elif total_15_60 == 0:
+                st.error("Jumlah penduduk kategori 15-60 tidak boleh kosong atau nol!")
+            elif total_60_plus == 0:
+                st.error("Jumlah penduduk kategori 60+ tidak boleh kosong atau nol!")
+            elif total_all == 0:
+                st.error("Total penduduk tidak boleh nol!")
             elif check_year_exists(new_year):
                 st.error(f"Data untuk tahun {new_year} sudah ada!")
             else:
