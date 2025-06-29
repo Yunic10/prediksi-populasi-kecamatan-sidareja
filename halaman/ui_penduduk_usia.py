@@ -44,9 +44,6 @@ def app():
         st.warning("Tidak ada data yang ditemukan!")
         st.stop()
     
-    # Tampilkan info data
-    st.info(f"Data yang dimuat: {len(df)} baris dari database Supabase")
-    
     # Get unique age groups
     age_groups = df['kategori_usia'].unique() if 'kategori_usia' in df.columns else []
     
