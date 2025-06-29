@@ -83,7 +83,7 @@ def app():
     df = get_population_data()
 
     # Tampilkan tabel dengan tombol hapus per baris
-    col1, col2, col3, col4= st.columns([1, 3, 3, 2])
+    col1, col2, col3, col4= st.columns([2, 3, 3, 2])
     with col1:
         st.write("Tahun")
     with col2:
