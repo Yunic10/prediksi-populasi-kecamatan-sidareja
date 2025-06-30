@@ -2,7 +2,7 @@ import streamlit as st
 from auth import login, is_authenticated, get_current_user
 
 def app():
-    st.header("🔐 Login Admin")
+    st.header("Login Admin")
     
     # Cek status login dari session state
     if is_authenticated():
@@ -18,13 +18,3 @@ def app():
         success, name, username = login()
         if success:
             st.rerun()
-    
-    # Informasi login
-    st.markdown("---")
-    st.markdown("### Informasi Login")
-    st.markdown("""
-    **User Default:**
-    - Username: `admin`, Password: `admin123`
-    - Username: `user1`, Password: `admin123`
-    - Username: `user2`, Password: `admin123`
-    """)
