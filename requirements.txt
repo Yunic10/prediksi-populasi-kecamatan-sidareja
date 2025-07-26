@@ -8,3 +8,4 @@ streamlit-option-menu>=0.3.6
 PyYAML>=5.3.1
 bcrypt>=3.1.7
 supabase>=2.0.0 
+werkzeug 

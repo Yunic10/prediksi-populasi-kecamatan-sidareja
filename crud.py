@@ -30,6 +30,13 @@ def update_data(user_id, name, age):
 def delete_data(user_id):
     supabase.table("users").delete().eq("id", user_id).execute()
 
+def confirm_user(user_id):
+    supabase.table("users").update({"is_confirmed": True}).eq("id_admin", user_id).execute()
+
+def get_unconfirmed_users():
+    response = supabase.table("users").select("id_admin, nama, username, role, is_confirmed").eq("is_confirmed", False).execute()
+    return response.data if response.data else []
+
 st.title("CRUD Streamlit dengan Supabase")
 
 # Form untuk menambah data
@@ -54,6 +61,20 @@ if data["penduduk_tahunan"]:
     st.dataframe(df_penduduk_tahunan, use_container_width=True)
 else:
     st.write("Belum ada data.")
+
+# Tambahkan tampilan untuk superadmin
+if "superadmin" in [u.get("role", "") for u in data["users"]]:
+    st.subheader("Konfirmasi Akun User Baru (Hanya Superadmin)")
+    unconfirmed = get_unconfirmed_users()
+    if unconfirmed:
+        for user in unconfirmed:
+            st.write(f"ID: {user['id_admin']}, Nama: {user['nama']}, Username: {user['username']}, Role: {user['role']}")
+            if st.button(f"Konfirmasi {user['username']}", key=f"confirm_{user['id_admin']}"):
+                confirm_user(user['id_admin'])
+                st.success(f"Akun {user['username']} berhasil dikonfirmasi!")
+                st.rerun()
+    else:
+        st.info("Tidak ada akun yang perlu dikonfirmasi.")
 
 # Form untuk update
 user_id = st.number_input("Masukkan ID untuk update:", min_value=1, step=1)

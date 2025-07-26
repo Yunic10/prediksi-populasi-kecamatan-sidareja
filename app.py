@@ -2,7 +2,7 @@ import streamlit as st
 st.set_page_config(page_title="Sidareja Predict")
 
 from streamlit_option_menu import option_menu
-from halaman import data_jumlah_penduduk, data_kepala_keluarga, data_putus_sekolah, data_migrasi, data_status_perkawinan, data_penduduk_usia, login_page, ui_dashboard, ui_kepala_keluarga, ui_migrasi, ui_penduduk_usia, ui_status_perkawinan, ui_putus_sekolah
+from halaman import data_jumlah_penduduk, data_kepala_keluarga, data_putus_sekolah, data_migrasi, data_status_perkawinan, data_penduduk_usia, login_page, ui_dashboard, ui_kepala_keluarga, ui_migrasi, ui_penduduk_usia, ui_status_perkawinan, ui_putus_sekolah, konfirmasi_akun
 from auth import is_authenticated, get_current_user, logout
 
 def show_unauthenticated_menu():
@@ -38,31 +38,41 @@ def show_unauthenticated_menu():
 def show_authenticated_menu():
     # Tampilkan informasi user yang sedang login
     name, username = get_current_user()
+    role = st.session_state.get('role', 'admin') # Ambil role dari session
     st.sidebar.title("👤 User Info")
     st.sidebar.success(f"Selamat datang, {name}!")
-    st.sidebar.info(f"Username: {username}")
-    
+    st.sidebar.warning(f"Role: {role.capitalize()}")
+
     with st.sidebar:
-        app = option_menu(
-            menu_title='',
-            options = [
+        options = [
             'Data Jumlah Penduduk', 
             'Data Jumlah Kepala Keluarga', 
             'Data Jumlah Migrasi', 
             'Data Status Perkawinan', 
             'Data Putus Sekolah',
-            'Data Penduduk Berdasarkan Usia', 
-            'Logout'
-            ],
-            icons = [
-                'people-fill',           # Data Jumlah Penduduk
-                'person-vcard-fill',     # Data Jumlah Kepala Keluarga (kartu identitas)
-                'arrow-left-right',      # Data Jumlah Migrasi (panah dua arah)
-                'heart-fill',           # Data Status Perkawinan (simbol hati)
-                'book',                 # Data Yang Tidak Bersekolah (simbol buku tertutup)
-                'graph-up',             # 
-                'box-arrow-right'       # Logout (tetap pakai yang sama)
-            ],
+            'Data Penduduk Berdasarkan Usia'
+        ]
+        icons = [
+            'people-fill',
+            'person-vcard-fill',
+            'arrow-left-right',
+            'heart-fill',
+            'book',
+            'graph-up'
+        ]
+        
+        # Tambahkan menu konfirmasi jika user adalah superadmin
+        if role == "superadmin":
+            options.append('Konfirmasi Akun')
+            icons.append('person-check-fill')
+
+        options.append('Logout')
+        icons.append('box-arrow-right')
+
+        app = option_menu(
+            menu_title='',
+            options=options,
+            icons=icons,
             menu_icon='chat-text-fill',
             default_index=0,
             styles={
@@ -72,6 +82,13 @@ def show_authenticated_menu():
                 "nav-link-selected": {"background-color": "grey", "font-weight": "normal"},
             }
         )
+
+    # Navigasi menu
+    if app == 'Konfirmasi Akun' and role == "superadmin":
+        konfirmasi_akun.app()
+    elif app == 'Logout':
+        logout()
+        st.rerun()
     if app == 'Data Jumlah Penduduk':
         data_jumlah_penduduk.app()
     elif app == 'Data Jumlah Kepala Keluarga':
@@ -84,8 +101,7 @@ def show_authenticated_menu():
         data_putus_sekolah.app()
     elif app == 'Data Penduduk Berdasarkan Usia':
         data_penduduk_usia.app()
-    elif app == 'Logout':
-        logout()
+
 
 def main():
     if is_authenticated():
