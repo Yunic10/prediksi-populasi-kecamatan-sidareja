@@ -61,7 +61,7 @@ def train_svm_model(feature_columns, target_column, data=None, table_name=None, 
         # Pipeline model
         model = Pipeline([
             ('scaler', StandardScaler()),
-            ('svr', SVR(kernel='linear', C=1000, epsilon=0.01))
+            ('svr', SVR(kernel='linear', C=250, epsilon=0.01))
         ])
         
         model.fit(X, y)
