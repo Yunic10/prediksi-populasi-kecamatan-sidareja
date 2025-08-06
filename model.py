@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from supabase import create_client, Client
 from sklearn.svm import SVR
-from sklearn.model_selection import train_test_split, GridSearchCV, TimeSeriesSplit
+from sklearn.model_selection import train_test_split, GridSearchCV, TimeSeriesSplit, cross_val_score, KFold
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, r2_score
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.pipeline import Pipeline
@@ -58,21 +58,32 @@ def train_svm_model(feature_columns, target_column, data=None, table_name=None, 
         X = df[feature_columns].values
         y = df[target_column].values
         
-        # Pipeline model
         model = Pipeline([
-            ('scaler', StandardScaler()),
-            ('svr', SVR(kernel='linear', C=250, epsilon=0.01))
+        ('scaler', StandardScaler()),
+        ('svr', SVR(kernel='linear', C=250, epsilon=0.01))
         ])
         
+        # Cross-Validation untuk evaluasi
+        kfold = KFold(n_splits=3, shuffle=True, random_state=42)
+        mae_scores = -cross_val_score(model, X, y, cv=kfold, scoring='neg_mean_absolute_error')
+        r2_scores = cross_val_score(model, X, y, cv=kfold, scoring='r2')
+        
+        # Calculate metrics
+        mae = mae_scores.mean()
+        r2 = r2_scores.mean()
+        
+        # Calculate MAPE manually
         model.fit(X, y)
-        
-        # Evaluasi
         y_pred = model.predict(X)
-        
-        mae = mean_absolute_error(y, y_pred)
         mape = mean_absolute_percentage_error(y, y_pred) * 100
-        r2 = r2_score(y, y_pred)
         
+        print("Cross-Validation Results:")
+        print(f"MAE: {mae:.2f} (±{mae_scores.std():.2f})")
+        print(f"MAPE: {mape:.2f}%")
+        print(f"R²: {r2:.4f} (±{r2_scores.std():.4f})")
+        
+        # Latih model dengan seluruh data untuk penggunaan akhir
+        model.fit(X, y)
         return model, mae, mape, r2
         
     except Exception as e:
